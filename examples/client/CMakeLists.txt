@@ -1,0 +1,8 @@
+add_executable(client
+  main.cpp
+)
+
+target_link_libraries(client
+  myproto
+  gRPC::grpc++_unsecure
+)

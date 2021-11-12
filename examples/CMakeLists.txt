@@ -9,3 +9,4 @@ find_package(gRPC CONFIG REQUIRED)
 
 add_subdirectory(protos)
 add_subdirectory(server)
+add_subdirectory(client)
