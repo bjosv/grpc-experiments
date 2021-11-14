@@ -1,6 +1,8 @@
 # grpc experiments
 
 ## Install
+
+```
 MY_INSTALL_DIR=`pwd`/install
 
 git clone --recurse-submodules -b v1.41.0 https://github.com/grpc/grpc
@@ -10,10 +12,27 @@ cmake -DgRPC_INSTALL=ON \
       -DCMAKE_INSTALL_PREFIX=$MY_INSTALL_DIR \
       ..
 make -j 4 all install
+```
 
 ## Build examples
 
+```
 mkdir examples/build && cd examples/build
 cmake ..
+```
 
+## Run examples
+
+### Server and client
+
+```
 ./server/server
+./client/client & ./client/client
+```
+
+### Server using socket mutator
+
+```
+./server-mutator/server-mutator
+./client/client & ./client/client
+```
