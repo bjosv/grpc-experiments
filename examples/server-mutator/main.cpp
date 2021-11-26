@@ -20,13 +20,11 @@ public:
     // We have to push any custom channel arguments into args.
     virtual void UpdateArguments(grpc::ChannelArguments* args);
 
-    // Alter the ServerBuilderPlugin map that will be added into ServerBuilder.
-    // We do not need this. However, this is a mandatory virtual
-    // method, hence defining it as an empty method.
     virtual void UpdatePlugins(std::vector<std::unique_ptr<grpc::ServerBuilderPlugin>> *plugins) {}
 };
 
-
+// Create a socket mutator that we can register to the ServerBuilder, see:
+// grpc/src/core/lib/iomgr/socket_mutator.h
 class CustomSocketMutator: public grpc_socket_mutator {
 public:
     CustomSocketMutator();

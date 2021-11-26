@@ -36,3 +36,17 @@ cmake ..
 ./server-mutator/server-mutator
 ./client/client & ./client/client
 ```
+
+### Server and client with TOS value (priority)
+
+```
+# Build and install
+https://github.com/Nordix/grpc/tree/add-tos-channelargs
+
+# Enable examples in build:
+# uncomment `server-tos` and `client-tos`in examples/CMakeLists.txt
+
+sudo tcpdump -v -n -i lo 'port 52231'
+./server-tos/server-tos
+./client-tos/client-tos
+```
