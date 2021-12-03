@@ -50,3 +50,17 @@ sudo tcpdump -v -n -i lo 'port 52231'
 ./server-tos/server-tos
 ./client-tos/client-tos
 ```
+
+### IPv6
+```
+# Verify that IPv6 is enabled
+ifconfig -a | grep inet6
+
+./server/server
+
+# Running `netstat -lnt`
+# `:::52231` means both IPv6 and IPv4
+
+sudo tcpdump -v -n -i lo 'port 52231'
+./client-ipv6/client-ipv6
+```
