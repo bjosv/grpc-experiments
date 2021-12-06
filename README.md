@@ -23,18 +23,23 @@ cmake -DCMAKE_BUILD_TYPE=DEBUG ..
 
 ## Run examples
 
-### Server and client
+### Regular server and client
 
 ```
-./server/server
-./client/client & ./client/client
+# IPv4
+GRPC_VERBOSITY=debug ./server/server "0.0.0.0:52231"
+GRPC_VERBOSITY=debug ./client/client "0.0.0.0:52231"
+
+# IPv6
+GRPC_VERBOSITY=debug ./server/server "[::1]:52231"
+GRPC_VERBOSITY=debug ./client/client "[::1]:52231"
 ```
 
-### Server using socket mutator
+### Server using socket mutator changing TOS value (priority)
 
 ```
 ./server-mutator/server-mutator
-./client/client & ./client/client
+./client/client "0.0.0.0:52231" & ./client/client "0.0.0.0:52231"
 ```
 
 ### Server and client with TOS value (priority)
@@ -47,29 +52,42 @@ https://github.com/Nordix/grpc/tree/add-tos-channelargs
 # uncomment `server-tos` and `client-tos`in examples/CMakeLists.txt
 
 sudo tcpdump -v -n -i lo 'port 52231'
-./server-tos/server-tos
-./client-tos/client-tos
+GRPC_VERBOSITY=debug ./server-tos/server-tos "127.0.0.1:52231"
+GRPC_VERBOSITY=debug ./client-tos/client-tos "127.0.0.1:52231"
 ```
 
-### IPv6
+#### IPv6
 
 ```
+# Server serving only IPv6 (::1)
+GRPC_VERBOSITY=debug ./server-tos/server-tos "[::1]:52231"
+GRPC_VERBOSITY=debug ./client-tos/client-tos "[::1]:52231"
+```
+
+```
+# Disable IPv6:
+sudo sysctl -w net.ipv6.conf.all.disable_ipv6=1
+sudo sysctl -w net.ipv6.conf.default.disable_ipv6=1
+sudo sysctl -w net.ipv6.conf.lo.disable_ipv6=1
+
+# Re-enable IPv6:
+sudo sysctl -w net.ipv6.conf.all.disable_ipv6=0
+sudo sysctl -w net.ipv6.conf.default.disable_ipv6=0
+sudo sysctl -w net.ipv6.conf.lo.disable_ipv6=0
+
 # Verify that IPv6 is enabled
 ifconfig -a | grep inet6
-
-# Server serving both IPv4 and IPv6 (0.0.0.0)
-./server/server
-./client/client
-./client-ipv6/client-ipv6
-
-# Server serving only IPv6 (::1)
-./server-ipv6/server-ipv6
-./client/client
-./client-ipv6/client-ipv6
 
 # Check server
 sudo tcpdump -v -n -i lo 'port 52231'
 
 netstat -lnt
 # `:::52231` means both IPv6 and IPv4
+
+cat /proc/sys/net/ipv6/bindv6only
+sudo sysctl -w net.ipv6.bindv6only=1
 ```
+
+### Verbose log
+
+See https://github.com/grpc/grpc/blob/master/TROUBLESHOOTING.md

@@ -39,8 +39,13 @@ private:
     std::unique_ptr<Greeter::Stub> stub_;
 };
 
-int main (void) {
-    string address("127.0.0.1:52231");
+int main(int argc, char** argv) {
+    if (argc != 2) {
+        std::cerr << "Usage: " << argv[0] << " <server address>" << std::endl;
+        return 1;
+    }
+    string address = argv[1];
+
     GreeterClient greeter(
     grpc::CreateChannel(address, grpc::InsecureChannelCredentials()));
 

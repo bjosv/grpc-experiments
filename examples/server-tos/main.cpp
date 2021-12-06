@@ -25,15 +25,19 @@ public:
     // This will be called inside ServerBuilder::BuildAndStart().
     // We have to push any custom channel arguments into args.
     virtual void UpdateArguments(grpc::ChannelArguments* args){
-        std::cout << "Set ChannelArgument: GRPC_ARG_IP_TOS" << std::endl;
-        args->SetInt(GRPC_ARG_IP_TOS, 0x20); // TOS Priority -> DSCP/PHB Class: cs1
+        std::cout << "Set ChannelArgument: GRPC_ARG_IP_TOS_TRAFFIC_CLASS" << std::endl;
+        args->SetInt(GRPC_ARG_IP_TOS_TRAFFIC_CLASS, 0x20); // TOS Priority -> DSCP/PHB Class: cs1
     }
 
     virtual void UpdatePlugins(std::vector<std::unique_ptr<grpc::ServerBuilderPlugin>> *plugins) {}
 };
 
-int main (void) {
-    std::string server_address("127.0.0.1:52231");
+int main(int argc, char** argv) {
+    if (argc != 2) {
+        std::cerr << "Usage: " << argv[0] << " <server address>" << std::endl;
+        return 1;
+    }
+    std::string server_address = argv[1];
     GreeterServiceImpl service;
 
     grpc::EnableDefaultHealthCheckService(true);

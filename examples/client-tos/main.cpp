@@ -35,11 +35,15 @@ private:
     std::unique_ptr<Greeter::Stub> stub_;
 };
 
-int main (void) {
-    string address("127.0.0.1:52231");
+int main(int argc, char** argv) {
+    if (argc != 2) {
+        std::cerr << "Usage: " << argv[0] << " <server address>" << std::endl;
+        return 1;
+    }
+    string address = argv[1];
 
     grpc::ChannelArguments args;
-    args.SetInt(GRPC_ARG_IP_TOS, 0x40); // TOS Immediate -> DSCP/PHB Class: cs2
+    args.SetInt(GRPC_ARG_IP_TOS_TRAFFIC_CLASS, 0x40); // TOS Immediate -> DSCP/PHB Class: cs2
 
     // Create a custom channel
     GreeterClient greeter(
