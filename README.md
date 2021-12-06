@@ -18,7 +18,7 @@ make -j 4 all install
 
 ```
 mkdir examples/build && cd examples/build
-cmake ..
+cmake -DCMAKE_BUILD_TYPE=DEBUG ..
 ```
 
 ## Run examples
@@ -52,15 +52,24 @@ sudo tcpdump -v -n -i lo 'port 52231'
 ```
 
 ### IPv6
+
 ```
 # Verify that IPv6 is enabled
 ifconfig -a | grep inet6
 
+# Server serving both IPv4 and IPv6 (0.0.0.0)
 ./server/server
-
-# Running `netstat -lnt`
-# `:::52231` means both IPv6 and IPv4
-
-sudo tcpdump -v -n -i lo 'port 52231'
+./client/client
 ./client-ipv6/client-ipv6
+
+# Server serving only IPv6 (::1)
+./server-ipv6/server-ipv6
+./client/client
+./client-ipv6/client-ipv6
+
+# Check server
+sudo tcpdump -v -n -i lo 'port 52231'
+
+netstat -lnt
+# `:::52231` means both IPv6 and IPv4
 ```

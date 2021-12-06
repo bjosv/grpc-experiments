@@ -12,6 +12,7 @@ add_subdirectory(server)
 add_subdirectory(client)
 add_subdirectory(server-mutator)
 
+add_subdirectory(server-ipv6)
 add_subdirectory(client-ipv6)
 
 # add_subdirectory(client-tos)
