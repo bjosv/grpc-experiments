@@ -19,6 +19,7 @@ make -j 4 all install
 ```
 mkdir examples/build && cd examples/build
 cmake -DCMAKE_BUILD_TYPE=DEBUG ..
+make
 
 # To build examples using the channel argument DSCP:
 cmake -DCMAKE_BUILD_TYPE=DEBUG -DENABLE_DSCP_TESTS=ON ..
@@ -48,8 +49,8 @@ GRPC_VERBOSITY=debug ./client/client "[::1]:52231"
 ### Server and client with DSCP value (priority)
 
 ```
-# Build and install
-https://github.com/Nordix/grpc/tree/add-dscp
+# Build and install (see above)
+git clone --recurse-submodules -b add-dscp git@github.com:Nordix/grpc.git
 
 # Build the DSCP examples by enabling them, see `ENABLE_DSCP_TESTS` above.
 
