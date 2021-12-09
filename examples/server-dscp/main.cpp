@@ -25,8 +25,8 @@ public:
     // This will be called inside ServerBuilder::BuildAndStart().
     // We have to push any custom channel arguments into args.
     virtual void UpdateArguments(grpc::ChannelArguments* args){
-        std::cout << "Set ChannelArgument: GRPC_ARG_IP_TOS_TRAFFIC_CLASS" << std::endl;
-        args->SetInt(GRPC_ARG_IP_TOS_TRAFFIC_CLASS, 0x20); // TOS Priority -> DSCP/PHB Class: cs1
+        std::cout << "Set ChannelArgument: GRPC_ARG_DSCP" << std::endl;
+        args->SetInt(GRPC_ARG_DSCP, 8); // TOS Priority -> DSCP/PHB Class: cs1
     }
 
     virtual void UpdatePlugins(std::vector<std::unique_ptr<grpc::ServerBuilderPlugin>> *plugins) {}

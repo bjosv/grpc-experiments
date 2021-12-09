@@ -19,6 +19,9 @@ make -j 4 all install
 ```
 mkdir examples/build && cd examples/build
 cmake -DCMAKE_BUILD_TYPE=DEBUG ..
+
+# To build examples using the channel argument DSCP:
+cmake -DCMAKE_BUILD_TYPE=DEBUG -DENABLE_DSCP_TESTS=ON ..
 ```
 
 ## Run examples
@@ -35,36 +38,40 @@ GRPC_VERBOSITY=debug ./server/server "[::1]:52231"
 GRPC_VERBOSITY=debug ./client/client "[::1]:52231"
 ```
 
-### Server using socket mutator changing TOS value (priority)
+### Server using socket mutator changing DSCP value (priority)
 
 ```
 ./server-mutator/server-mutator
 ./client/client "0.0.0.0:52231" & ./client/client "0.0.0.0:52231"
 ```
 
-### Server and client with TOS value (priority)
+### Server and client with DSCP value (priority)
 
 ```
 # Build and install
-https://github.com/Nordix/grpc/tree/add-tos-channelargs
+https://github.com/Nordix/grpc/tree/add-dscp
 
-# Enable examples in build:
-# uncomment `server-tos` and `client-tos`in examples/CMakeLists.txt
+# Build the DSCP examples by enabling them, see `ENABLE_DSCP_TESTS` above.
 
 sudo tcpdump -v -n -i lo 'port 52231'
-GRPC_VERBOSITY=debug ./server-tos/server-tos "127.0.0.1:52231"
-GRPC_VERBOSITY=debug ./client-tos/client-tos "127.0.0.1:52231"
+GRPC_VERBOSITY=debug ./server-dscp/server-dscp "127.0.0.1:52231"
+GRPC_VERBOSITY=debug ./client-dscp/client-dscp "127.0.0.1:52231"
 ```
 
 #### IPv6
 
 ```
 # Server serving only IPv6 (::1)
-GRPC_VERBOSITY=debug ./server-tos/server-tos "[::1]:52231"
-GRPC_VERBOSITY=debug ./client-tos/client-tos "[::1]:52231"
+GRPC_VERBOSITY=debug ./server-dscp/server-dscp "[::1]:52231"
+GRPC_VERBOSITY=debug ./client-dscp/client-dscp "[::1]:52231"
 ```
 
 ```
+# Get current status regarding IPv6
+sudo sysctl net.ipv6.conf.all.disable_ipv6
+sudo sysctl net.ipv6.conf.default.disable_ipv6
+sudo sysctl net.ipv6.conf.lo.disable_ipv6
+
 # Disable IPv6:
 sudo sysctl -w net.ipv6.conf.all.disable_ipv6=1
 sudo sysctl -w net.ipv6.conf.default.disable_ipv6=1
@@ -91,3 +98,11 @@ sudo sysctl -w net.ipv6.bindv6only=1
 ### Verbose log
 
 See https://github.com/grpc/grpc/blob/master/TROUBLESHOOTING.md
+
+
+### GRPC
+
+```
+# Code format
+tools/distrib/clang_format_code.sh
+```

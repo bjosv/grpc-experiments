@@ -43,7 +43,7 @@ int main(int argc, char** argv) {
     string address = argv[1];
 
     grpc::ChannelArguments args;
-    args.SetInt(GRPC_ARG_IP_TOS_TRAFFIC_CLASS, 0x40); // TOS Immediate -> DSCP/PHB Class: cs2
+    args.SetInt(GRPC_ARG_DSCP, 16); // TOS Immediate -> DSCP/PHB Class: cs2
 
     // Create a custom channel
     GreeterClient greeter(
