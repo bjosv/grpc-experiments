@@ -9,12 +9,17 @@
 static void test_dscp(int fd) {
     int value = 8;
 
+    // The TOS/TrafficClass byte consists of following bits:
+    // | 7 6 5 4 3 2 | 1 0 |
+    // |    DSCP     | ECN |
+    value <<= 2;
+
     int optval;
     socklen_t optlen = sizeof(optval);
     if (0 == getsockopt(fd, IPPROTO_IP, IP_TOS, &optval, &optlen)) {
         printf("  IP_TOS got: 0x%x\n", optval);
 
-        value = (value << 2) | (optval & 0x3);
+        value |= (optval & 0x3);
         if (0 != setsockopt(fd, IPPROTO_IP, IP_TOS, &value, sizeof(value))) {
             assert(0);
         }
@@ -29,6 +34,7 @@ static void test_dscp(int fd) {
     // Get ECN from Traffic Class if IPv6 is available
     if (0 == getsockopt(fd, IPPROTO_IPV6, IPV6_TCLASS, &optval, &optlen)) {
         printf("  IPV6_TCLASS got: 0x%x\n", optval);
+
         value |= (optval & 0x3);
         if (0 != setsockopt(fd, IPPROTO_IPV6, IPV6_TCLASS, &value,
                             sizeof(value))) {
