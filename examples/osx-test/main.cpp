@@ -11,21 +11,20 @@ static void test_dscp(int fd) {
 
     int optval;
     socklen_t optlen = sizeof(optval);
-    if (0 != getsockopt(fd, IPPROTO_IP, IP_TOS, &optval, &optlen)) {
-        assert(0);
-    }
-    printf("  IP_TOS got: 0x%x\n", optval);
+    if (0 == getsockopt(fd, IPPROTO_IP, IP_TOS, &optval, &optlen)) {
+        printf("  IP_TOS got: 0x%x\n", optval);
 
-    value = (value << 2) | (optval & 0x3);
-    if (0 != setsockopt(fd, IPPROTO_IP, IP_TOS, &value, sizeof(value))) {
-        assert(0);
-    }
-    printf("  IP_TOS set to 0x%x\n", value);
+        value = (value << 2) | (optval & 0x3);
+        if (0 != setsockopt(fd, IPPROTO_IP, IP_TOS, &value, sizeof(value))) {
+            assert(0);
+        }
+        printf("  IP_TOS set to 0x%x\n", value);
 
-    if (0 != getsockopt(fd, IPPROTO_IP, IP_TOS, &optval, &optlen)) {
-        assert(0);
+        if (0 != getsockopt(fd, IPPROTO_IP, IP_TOS, &optval, &optlen)) {
+            assert(0);
+        }
+        printf("  IP_TOS got: 0x%x\n", optval);
     }
-    printf("  IP_TOS got: 0x%x\n", optval);
 
     // Get ECN from Traffic Class if IPv6 is available
     if (0 == getsockopt(fd, IPPROTO_IPV6, IPV6_TCLASS, &optval, &optlen)) {
