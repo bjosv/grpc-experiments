@@ -59,6 +59,14 @@ GRPC_VERBOSITY=debug ./server-dscp/server-dscp "127.0.0.1:52231"
 GRPC_VERBOSITY=debug ./client-dscp/client-dscp "127.0.0.1:52231"
 ```
 
+### Client using socket mutator changing DSCP value (priority)
+
+```
+./server/server 127.0.0.1:52231 & ./server/server 127.0.0.1:52232
+./client-mutator/client-mutator
+sudo tcpdump -i lo -v ip
+```
+
 #### IPv6
 
 ```
