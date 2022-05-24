@@ -2,6 +2,7 @@
 #include <grpcpp/impl/server_builder_plugin.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <arpa/inet.h>
 
 #include "hello.grpc.pb.h"
 #include "socket_mutator.h"
@@ -12,7 +13,7 @@ using hello::HelloReply;
 
 class CustomServerBuilderOption: public grpc::ServerBuilderOption {
 public:
-    CustomServerBuilderOption() {}
+    CustomServerBuilderOption(int tos) : tos(tos) {}
     ~CustomServerBuilderOption() {}
 
     // Alter the ChannelArguments used to create the gRPC server.
@@ -21,15 +22,19 @@ public:
     virtual void UpdateArguments(grpc::ChannelArguments* args);
 
     virtual void UpdatePlugins(std::vector<std::unique_ptr<grpc::ServerBuilderPlugin>> *plugins) {}
+private:
+    int tos;
 };
 
 // Create a socket mutator that we can register to the ServerBuilder, see:
 // grpc/src/core/lib/iomgr/socket_mutator.h
 class CustomSocketMutator: public grpc_socket_mutator {
 public:
-    CustomSocketMutator();
+    CustomSocketMutator(int tos);
     ~CustomSocketMutator() {}
     bool mutate(grpc_fd_usage usage, int fd);
+private:
+    int tos;
 };
 
 
@@ -57,21 +62,25 @@ grpc_socket_mutator_vtable custom_mutator_vtable = {custom_mutator_mutate_fd, cu
 
 
 void CustomServerBuilderOption::UpdateArguments(grpc::ChannelArguments *pArg) {
-    CustomSocketMutator *pSocketMutator = new CustomSocketMutator();
+    CustomSocketMutator *pSocketMutator = new CustomSocketMutator(tos);
     pArg->SetSocketMutator(pSocketMutator);
 }
 
 
-CustomSocketMutator::CustomSocketMutator() {
+CustomSocketMutator::CustomSocketMutator(int tos) : tos(tos) {
     // Init the grpc_socket_mutator vtable.
     grpc_socket_mutator_init(this, &custom_mutator_vtable);
 }
 
 // Mutate socket
 bool CustomSocketMutator::mutate(grpc_fd_usage usage, int fd) {
-    std::cout << "Run CustomSocketMutator::mutate:Socketopt() fd=" << fd << " usage: ";
+    // Get port
+    struct sockaddr_in addr;
+    bzero(&addr, sizeof(addr));
+    socklen_t addr_len = sizeof(addr);
+    getsockname(fd, (struct sockaddr *) &addr, &addr_len);
 
-    int tos = 0; // CS0
+    std::cout << "Run CustomSocketMutator::mutate:Socketopt() fd=" << fd << " port:" << ntohs(addr.sin_port) << " usage: ";
 
     switch(usage) {
         case GRPC_FD_CLIENT_CONNECTION_USAGE:
@@ -80,12 +89,10 @@ bool CustomSocketMutator::mutate(grpc_fd_usage usage, int fd) {
         case GRPC_FD_SERVER_LISTENER_USAGE:
             // A client has connected to this server
             std::cout << "GRPC_FD_SERVER_LISTENER_USAGE";
-            tos = 0x28; // AF11
             break;
         case GRPC_FD_SERVER_CONNECTION_USAGE:
             // A server socket has been created
             std::cout << "GRPC_FD_SERVER_CONNECTION_USAGE";
-            tos = 0x78; // AF33
             break;
         default:
             std::cout << "<unknown>";
@@ -124,25 +131,44 @@ class GreeterServiceImpl final : public Greeter::Service {
 };
 
 int main (void) {
+    grpc::EnableDefaultHealthCheckService(true);
+
+    // Server 1
     std::string server_address("127.0.0.1:52231");
     GreeterServiceImpl service;
-
-    grpc::EnableDefaultHealthCheckService(true);
 
     grpc::ServerBuilder builder;
     builder.RegisterService(&service);
     builder.AddListeningPort(server_address, grpc::InsecureServerCredentials());
 
     // Add ServerBuilderOption
-    std::unique_ptr<CustomServerBuilderOption> customServerBuilderOption(new CustomServerBuilderOption());
+    std::unique_ptr<CustomServerBuilderOption> customServerBuilderOption(new CustomServerBuilderOption(0x28)); // AF11
     builder.SetOption(std::move(customServerBuilderOption));
 
     // Assemble server
     std::unique_ptr<grpc::Server> server(builder.BuildAndStart());
     std::cout << "Server listening on " << server_address << std::endl;
 
-    // Wait for the server to shutdown
+
+    // Server 2
+    std::string server_address2("127.0.0.1:52232");
+    GreeterServiceImpl service2;
+
+    grpc::ServerBuilder builder2;
+    builder2.RegisterService(&service2);
+    builder2.AddListeningPort(server_address2, grpc::InsecureServerCredentials());
+
+    // Add ServerBuilderOption
+    std::unique_ptr<CustomServerBuilderOption> customServerBuilderOption2(new CustomServerBuilderOption(0x78)); // AF33
+    builder2.SetOption(std::move(customServerBuilderOption2));
+
+    // Assemble server
+    std::unique_ptr<grpc::Server> server2(builder2.BuildAndStart());
+    std::cout << "Server listening on " << server_address2 << std::endl;
+
+    // Wait for the servers to shutdown
     server->Wait();
+    server2->Wait();
 
     return 0;
 }
