@@ -1,0 +1,23 @@
+name: Build and run examples
+
+on: [push, pull_request]
+
+jobs:
+  windows:
+    name: Windows Visual Studio ${{ matrix.version }}
+    runs-on: windows-${{ matrix.version }}
+    strategy:
+      fail-fast: false
+      matrix:
+        version: [2019, 2022]
+    steps:
+      - uses: microsoft/setup-msbuild@v1.1
+      - uses: actions/checkout@v3
+      - name: Build
+        run: |
+          cd issues/dscp/qos2-windows/
+          cmake .
+          msbuild Examples.sln /m /property:Configuration=Debug
+      - name: Run
+        run: |
+          Debug\qos-test.exe
