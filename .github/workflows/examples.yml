@@ -21,4 +21,5 @@ jobs:
       - name: Run
         run: |
           cd issues/dscp/qos2-windows/Debug
+          dir
           qos-test.exe
