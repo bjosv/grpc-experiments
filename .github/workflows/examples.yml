@@ -20,4 +20,6 @@ jobs:
           msbuild Examples.sln /m /property:Configuration=Debug
       - name: Run
         run: |
-          Debug\qos-test.exe
+          dir
+          cd Debug
+          qos-test.exe

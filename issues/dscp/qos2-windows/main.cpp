@@ -110,10 +110,8 @@ int main() {
     sockaddr_in6 addr;
     ZeroMemory(&addr, sizeof(addr));
     addr.sin6_family = AF_INET6;
-    //addr.sin6_port = DEFAULT_PORT;
     addr.sin6_port = htons(DEFAULT_PORT);
     inet_pton(AF_INET6, "::1", &addr.sin6_addr);
-
 
     BOOL success = ConnectEx(sock, (struct sockaddr*) &addr, sizeof(addr), NULL, 0, NULL, &overlapped);
     if (success) {
@@ -141,7 +139,6 @@ int main() {
                                    QOS_NON_ADAPTIVE_FLOW,
                                    &qosFlowId);
     if (qosResult != TRUE) {
-        //printf("QOSAddSocketToFlow failed with error: %ld\n", WSAGetLastError());
         wchar_t *s = NULL;
         FormatMessageW(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
                        NULL, WSAGetLastError(),
@@ -155,7 +152,7 @@ int main() {
         printf("QOSCloseHandle failed with error: %ld\n", WSAGetLastError());
     }
 
-    // cleanup
+    // Cleanup
     closesocket(sock);
     status = WSACleanup();
     if (status != 0) {
