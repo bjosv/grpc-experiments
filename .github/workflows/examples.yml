@@ -18,8 +18,7 @@ jobs:
           cd issues/dscp/qos2-windows/
           cmake .
           msbuild Examples.sln /m /property:Configuration=Debug
-          dir
       - name: Run
         run: |
-          cd Debug
+          cd issues/dscp/qos2-windows/Debug
           qos-test.exe
