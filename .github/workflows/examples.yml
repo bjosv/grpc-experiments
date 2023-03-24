@@ -18,8 +18,13 @@ jobs:
           cd issues/dscp/qos2-windows/
           cmake .
           msbuild Examples.sln /m /property:Configuration=Debug
+      - name: Check
+        run: |
+          dir
+          cd issues/dscp/qos2-windows/
+          dir
+          cd Debug
+          dir
       - name: Run
         run: |
-          cd issues/dscp/qos2-windows/Debug
-          dir
-          qostest.exe
+          issues\dscp\qos2-windows\Debug\qostest.exe
