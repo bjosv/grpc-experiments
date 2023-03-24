@@ -22,4 +22,4 @@ jobs:
         run: |
           cd issues/dscp/qos2-windows/Debug
           dir
-          qos-test.exe
+          qostest.exe
