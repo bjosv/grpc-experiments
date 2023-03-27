@@ -144,7 +144,7 @@ int main() {
                        NULL, WSAGetLastError(),
                        MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
                        (LPWSTR)&s, 0, NULL);
-        fprintf(stderr, "%S [%ld]\n", s, WSAGetLastError());
+        printf("QOSAddSocketToFlow failed: %S [%ld]\n", s, WSAGetLastError());
         LocalFree(s);
     }
 
