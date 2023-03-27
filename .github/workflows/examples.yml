@@ -18,13 +18,19 @@ jobs:
           cd issues/dscp/qos2-windows/
           cmake .
           msbuild Examples.sln /m /property:Configuration=Debug
-      - name: Check
+      - name: Get user
+        run: |
+          Get-LocalUser
+      - name: Check admin
         run: |
           Get-LocalGroupMember -Group "Administrators"
+      - name: Check network operators
+        run: |
           Get-LocalGroupMember -Group "Network Configuration Operators"
       - name: Run
         run: |
-          # Add-LocalGroupMember -Group "Network Configuration Operators" -Member "$env:UserName"
-          Add-LocalGroupMember -Group "Network Configuration Operators" -Member "$username"
-          Get-LocalGroupMember -Group "Network Configuration Operators"
+          Add-LocalGroupMember -Group "Network Configuration Operators" -Member "$env:UserName" -Verbose
           issues\dscp\qos2-windows\Debug\qos-test.exe
+      - name: Check network operators after
+        run: |
+          Get-LocalGroupMember -Group "Network Configuration Operators"
