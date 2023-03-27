@@ -10,7 +10,7 @@
 #include <MSWSock.h> /* LPFN_CONNECTEX */
 
 #define DEFAULT_BUFLEN 512
-#define DEFAULT_PORT 5001
+#define DEFAULT_PORT 6379
 
 int main() {
     int status;

@@ -11,6 +11,9 @@ jobs:
       matrix:
         version: [2019, 2022]
     steps:
+      # Install memurai, a redis compatible server, since it is easy to install
+      - name: Install Memurai redis server
+        run: choco install -y memurai-developer.install
       - uses: microsoft/setup-msbuild@v1.1
       - uses: actions/checkout@v3
       - name: Build
