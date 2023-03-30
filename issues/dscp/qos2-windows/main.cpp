@@ -14,24 +14,22 @@
 #define USE_IPV6_DUALSTACK
 #define USE_TCP
 #define USE_SETFLOW         // Works if run as administrator, pure IPv6 or IPv4
-//#define ADD_FLOW_BEFORE_CONNECT
+//#define ADD_FLOW_BEFORE_CONNECT  // Add flow before connect is finished, not woking for IPv4 in IPv6
 
 #ifdef USE_IPV6
-    //#define DEFAULT_ORIG_ADDR "::1" // NOT IN USE
     #ifdef USE_IPV4_IN_IPV6
       #define DEFAULT_DEST_ADDR "10.10.10.78"
     #else
       #define DEFAULT_DEST_ADDR "fe80::ccdd:e840:b706:9dec" // Works!
   #endif
 #else
-  //#define DEFAULT_ORIG_ADDR "0.0.0.0" // NOT IN USE
-
   //#define DEFAULT_DEST_ADDR "127.0.0.1"    // No DSCP when using loopback
   //#define DEFAULT_DEST_ADDR "10.10.10.194" // No DSCP when same machine
-  #define DEFAULT_DEST_ADDR "10.10.10.78"  // Works! Using IPv4 to external IPs
+  //#define DEFAULT_DEST_ADDR "10.10.10.78"  // Works! Using IPv4 to external IPs
+#define DEFAULT_DEST_ADDR "45.79.112.203" //"tcpbin.com"
 #endif
 
-#define DEFAULT_PORT 5001
+#define DEFAULT_PORT 4242
 
 int main() {
     int status;
@@ -129,14 +127,12 @@ int main() {
     struct sockaddr_in6 ip6addr;
     ZeroMemory(&ip6addr, sizeof(ip6addr));
     ip6addr.sin6_family = AF_INET6;
-//    inet_pton(AF_INET6, DEFAULT_ORIG_ADDR, &ip6addr.sin6_addr);
     status = bind(sock, (struct sockaddr*) &ip6addr, sizeof(ip6addr));
 #else
     printf("Bind IPv4..\n");
     struct sockaddr_in ip4addr;
     ZeroMemory(&ip4addr, sizeof(ip4addr));
     ip4addr.sin_family = AF_INET;
-    //inet_pton(AF_INET, DEFAULT_ORIG_ADDR, &ip4addr.sin_addr);
     status = bind(sock, (struct sockaddr*) &ip4addr, sizeof(ip4addr));
 #endif
 
