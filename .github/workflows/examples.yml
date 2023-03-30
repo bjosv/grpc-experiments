@@ -11,9 +11,6 @@ jobs:
       matrix:
         version: [2019, 2022]
     steps:
-      # Install memurai, a redis compatible server, since it is easy to install
-      - name: Install Memurai redis server
-        run: choco install -y memurai-developer.install
       - uses: microsoft/setup-msbuild@v1.1
       - uses: actions/checkout@v3
       - name: Build
@@ -21,19 +18,17 @@ jobs:
           cd issues/dscp/qos2-windows/
           cmake .
           msbuild Examples.sln /m /property:Configuration=Debug
-      - name: Get user
+
+      - name: Get users in groups
         run: |
           Get-LocalUser
-      - name: Check admin
-        run: |
           Get-LocalGroupMember -Group "Administrators"
-      - name: Check network operators
-        run: |
           Get-LocalGroupMember -Group "Network Configuration Operators"
+
       - name: Run
         run: |
-          Add-LocalGroupMember -Group "Network Configuration Operators" -Member "$env:UserName" -Verbose
           issues\dscp\qos2-windows\Debug\qos-test.exe
-      - name: Check network operators after
+
+      - name: Run (as admin)
         run: |
-          Get-LocalGroupMember -Group "Network Configuration Operators"
+          start-process issues\dscp\qos2-windows\Debug\qos-test.exe -verb runas
