@@ -28,7 +28,3 @@ jobs:
       - name: Run
         run: |
           issues\dscp\qos2-windows\Debug\qos-test.exe
-
-      - name: Run (as admin)
-        run: |
-          start-process issues\dscp\qos2-windows\Debug\qos-test.exe -verb runas

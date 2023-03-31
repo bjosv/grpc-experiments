@@ -296,7 +296,7 @@ int main() {
 #ifdef USE_SETFLOW
     DWORD dscp = 3;
     printf("QOSSetFlow dscp=%d\n", dscp);
-    if (QOSSetFlow(qosHandle, qosFlowId, QOSSetOutgoingDSCPValue, sizeof(dscp), &dscp, 0,NULL) != 0)
+    if (QOSSetFlow(qosHandle, qosFlowId, QOSSetOutgoingDSCPValue, sizeof(dscp), &dscp, 0,NULL) == 0)
     {
         wchar_t *s = NULL;
         FormatMessageW(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
