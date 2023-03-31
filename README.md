@@ -1,5 +1,7 @@
 # grpc experiments
 
+This is for Linux, see alternative information for [Windows](windows.md)
+
 ## Install
 
 ```
