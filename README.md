@@ -9,11 +9,14 @@ MY_INSTALL_DIR=`pwd`/install
 
 git clone --recurse-submodules -b v1.41.0 https://github.com/grpc/grpc
 mkdir -p grpc/build && cd grpc/build
-cmake -DgRPC_INSTALL=ON \
+cmake -GNinja \
+      -DgRPC_INSTALL=ON \
       -DgRPC_BUILD_TESTS=OFF \
       -DCMAKE_INSTALL_PREFIX=$MY_INSTALL_DIR \
       ..
-make -j 4 all install
+ninja install
+
+(make -j 4 all install)
 ```
 
 ## Build examples
@@ -111,9 +114,18 @@ sudo sysctl -w net.ipv6.bindv6only=1
 See https://github.com/grpc/grpc/blob/master/TROUBLESHOOTING.md
 
 
-### GRPC
+### GRPC development
 
 ```
+# Re-generate build files
+tools/buildgen/generate_projects.sh
+
+# Check all
+tools/distrib/sanitize.sh
+
 # Code format
 tools/distrib/clang_format_code.sh
+
+# Build with Bazel and GCC
+CC=gcc CXX=g++ bazel build //test/...
 ```
