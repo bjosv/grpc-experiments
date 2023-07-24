@@ -11,9 +11,9 @@ git clone --recurse-submodules -b v1.41.0 https://github.com/grpc/grpc
 mkdir -p grpc/build && cd grpc/build
 cmake -GNinja \
       -DgRPC_INSTALL=ON \
-      -DgRPC_BUILD_TESTS=OFF \
+      -DgRPC_BUILD_TESTS=ON \
       -DCMAKE_INSTALL_PREFIX=$MY_INSTALL_DIR \
-      ..
+      ../..
 ninja install
 
 (make -j 4 all install)
@@ -117,6 +117,10 @@ See https://github.com/grpc/grpc/blob/master/TROUBLESHOOTING.md
 ### GRPC development
 
 ```
+# Requirements
+sudo apt install python3 python3-pip
+pip install markupsafe
+
 # Re-generate build files
 tools/buildgen/generate_projects.sh
 
