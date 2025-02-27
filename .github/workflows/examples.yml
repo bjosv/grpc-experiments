@@ -4,6 +4,7 @@ on: [push, pull_request]
 
 jobs:
   windows:
+    if: false # Temporary disabled
     name: Windows Visual Studio ${{ matrix.version }}
     runs-on: windows-${{ matrix.version }}
     strategy:

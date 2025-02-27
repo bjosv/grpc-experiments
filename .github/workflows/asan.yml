@@ -1,0 +1,274 @@
+name: ASAN
+
+on: [push, pull_request]
+
+permissions:
+  contents: read
+
+jobs:
+  static:
+    name: Static grpc-${{ matrix.grpc-version }}, ASAN all
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        grpc-version: [v1.68.1, v1.69.0]
+    steps:
+    - uses: actions/checkout@v4
+    - name: Install ninja
+      run: |
+        sudo apt install -y ninja-build
+    - name: Install clang-19
+      run: |
+        wget https://apt.llvm.org/llvm.sh
+        chmod +x llvm.sh
+        sudo ./llvm.sh 19
+    - name: Build and install grpc with ASAN
+      shell: bash # enable pipefail
+      run: |
+        git clone --recurse-submodules -b ${{ matrix.grpc-version }} https://github.com/grpc/grpc
+        cd grpc && mkdir build && cd build
+        CXXFLAGS="-fsanitize=address -fno-omit-frame-pointer" \
+          CFLAGS="-fsanitize=address -fno-omit-frame-pointer" \
+          LDFLAGS="-fsanitize=address" \
+          CC=clang-19 CXX=clang++-19 cmake -G Ninja \
+          -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+          -DCMAKE_CXX_STANDARD=17 \
+          -DgRPC_BUILD_TESTS=OFF \
+          ..
+        sudo ninja -v install | tee log.txt
+    - name: Get compile/link commands that are not using -fsanitize
+      run: |
+        grep '/usr/bin/clang' grpc/build/log.txt | grep -v fsanitize || true
+    - name: Build and run example using 'repeated'
+      run: |
+        cd examples/repeated
+        mkdir build && cd build
+        CXXFLAGS="-fsanitize=address -fno-omit-frame-pointer" \
+          CFLAGS="-fsanitize=address -fno-omit-frame-pointer" \
+          LDFLAGS="-fsanitize=address" \
+          CC=clang-19 CXX=clang++-19 cmake \
+          -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+          ..
+        VERBOSE=1 make
+        ./server 127.0.0.1:8899 &
+        sleep 2s
+        ./client 127.0.0.1:8899
+
+  shared:
+    name: Shared grpc-${{ matrix.grpc-version }}, ASAN exec only
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - grpc-version: 'v1.68.1'
+            protobuf-version: 'v28.1'
+            abseil-version: '20240722.0'
+          - grpc-version: 'v1.69.0'
+            protobuf-version: 'v29.0'
+            abseil-version: '20240722.0'
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Install ninja
+      run: |
+        sudo apt install -y ninja-build
+    - name: Install clang-19
+      run: |
+        wget https://apt.llvm.org/llvm.sh
+        chmod +x llvm.sh
+        sudo ./llvm.sh 19
+    - name: Build and install abseil-cpp (no ASAN)
+      shell: bash # enable pipefail
+      run: |
+        git clone -b ${{ matrix.abseil-version }} https://github.com/abseil/abseil-cpp
+        cd abseil-cpp && mkdir build && cd build
+          CC=clang-19 CXX=clang++-19 cmake -G Ninja \
+          -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+          -DCMAKE_CXX_STANDARD=17 \
+          -DCMAKE_INSTALL_PREFIX=/usr \
+          -DBUILD_SHARED_LIBS=ON \
+          -DABSL_ENABLE_INSTALL=ON \
+          ..
+        sudo ninja -v install | tee log.txt
+    - name: Build and install protobuf (no ASAN)
+      shell: bash # enable pipefail
+      run: |
+        git clone --recurse-submodules -b ${{ matrix.protobuf-version }} https://github.com/protocolbuffers/protobuf
+        cd protobuf && mkdir build && cd build
+          CC=clang-19 CXX=clang++-19 cmake -G Ninja \
+          -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+          -DCMAKE_CXX_STANDARD=17 \
+          -DCMAKE_INSTALL_PREFIX=/usr \
+          -DBUILD_SHARED_LIBS=ON \
+          -Dprotobuf_BUILD_TESTS=OFF \
+          -Dprotobuf_ABSL_PROVIDER=package \
+          ..
+        sudo ninja -v install | tee log.txt
+    - name: Build and install grpc (no ASAN)
+      shell: bash # enable pipefail
+      run: |
+        git clone --recurse-submodules -b ${{ matrix.grpc-version }} https://github.com/grpc/grpc
+        cd grpc && mkdir build && cd build
+          CC=clang-19 CXX=clang++-19 cmake -G Ninja \
+          -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+          -DCMAKE_CXX_STANDARD=17 \
+          -DCMAKE_INSTALL_PREFIX=/usr \
+          -DBUILD_SHARED_LIBS=ON \
+          -DgRPC_BUILD_TESTS=OFF \
+          -DgRPC_PROTOBUF_PROVIDER=package \
+          -DgRPC_ABSL_PROVIDER=package \
+          ..
+        sudo ninja -v install | tee log.txt
+    - name: Build and run example using 'repeated' with ASAN
+      continue-on-error: true
+      run: |
+        cd examples/repeated
+        mkdir build1 && cd build1
+        CXXFLAGS="-fsanitize=address -fno-omit-frame-pointer" \
+          CFLAGS="-fsanitize=address -fno-omit-frame-pointer" \
+          LDFLAGS="-fsanitize=address" \
+          CC=clang-19 CXX=clang++-19 cmake \
+          -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+          -DCMAKE_CXX_STANDARD=17 \
+          ..
+        VERBOSE=1 make
+
+        ./server 127.0.0.1:8899 &
+        sleep 2s
+        ./client 127.0.0.1:8899
+    - name: Build and run example using 'repeated' with ASAN (ASAN_OPTIONS)
+      run: |
+        cd examples/repeated
+        mkdir build2 && cd build2
+        CXXFLAGS="-fsanitize=address -fno-omit-frame-pointer" \
+          CFLAGS="-fsanitize=address -fno-omit-frame-pointer" \
+          LDFLAGS="-fsanitize=address" \
+          CC=clang-19 CXX=clang++-19 cmake \
+          -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+          -DCMAKE_CXX_STANDARD=17 \
+          ..
+        VERBOSE=1 make
+
+        ASAN_OPTIONS=detect_odr_violation=0 ./server 127.0.0.1:8899 &
+        sleep 2s
+        ASAN_OPTIONS=detect_odr_violation=0 ./client 127.0.0.1:8899
+
+  shared-asan-all:
+    name: Shared grpc-${{ matrix.grpc-version }}, ASAN all
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - grpc-version: 'v1.68.1'
+            protobuf-version: 'v28.1'
+            abseil-version: '20240722.0'
+          - grpc-version: 'v1.69.0'
+            protobuf-version: 'v29.0'
+            abseil-version: '20240722.0'
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Install ninja
+      run: |
+        sudo apt install -y ninja-build
+    - name: Install clang-19
+      run: |
+        wget https://apt.llvm.org/llvm.sh
+        chmod +x llvm.sh
+        sudo ./llvm.sh 19
+    - name: Build and install abseil-cpp with ASAN
+      shell: bash # enable pipefail
+      run: |
+        git clone -b ${{ matrix.abseil-version }} https://github.com/abseil/abseil-cpp
+        cd abseil-cpp && mkdir build && cd build
+        CXXFLAGS="-fsanitize=address -fno-omit-frame-pointer" \
+          CFLAGS="-fsanitize=address -fno-omit-frame-pointer" \
+          LDFLAGS="-fsanitize=address -shared-libsan -Wl,-rpath=$(dirname $(clang-19 --print-file-name=libclang_rt.asan-x86_64.so))" \
+          CC=clang-19 CXX=clang++-19 cmake -G Ninja \
+          -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+          -DCMAKE_CXX_STANDARD=17 \
+          -DCMAKE_INSTALL_PREFIX=/usr \
+          -DBUILD_SHARED_LIBS=ON \
+          -DABSL_ENABLE_INSTALL=ON \
+          ..
+        sudo ninja -v install | tee log.txt
+    - name: Get compile/link commands that are not using -fsanitize
+      run: |
+        grep '/usr/bin/clang' abseil-cpp/build/log.txt | grep -v fsanitize || true
+    - name: Build and install protobuf with ASAN
+      shell: bash # enable pipefail
+      run: |
+        git clone --recurse-submodules -b ${{ matrix.protobuf-version }} https://github.com/protocolbuffers/protobuf
+        cd protobuf && mkdir build && cd build
+        CXXFLAGS="-fsanitize=address -fno-omit-frame-pointer" \
+          CFLAGS="-fsanitize=address -fno-omit-frame-pointer" \
+          LDFLAGS="-fsanitize=address -shared-libsan -Wl,-rpath=$(dirname $(clang-19 --print-file-name=libclang_rt.asan-x86_64.so))" \
+          CC=clang-19 CXX=clang++-19 cmake -G Ninja \
+          -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+          -DCMAKE_CXX_STANDARD=17 \
+          -DCMAKE_INSTALL_PREFIX=/usr \
+          -DBUILD_SHARED_LIBS=ON \
+          -Dprotobuf_BUILD_TESTS=OFF \
+          -Dprotobuf_ABSL_PROVIDER=package \
+          ..
+        sudo ninja -v install | tee log.txt
+    - name: Get compile/link commands that are not using -fsanitize
+      run: |
+        grep '/usr/bin/clang' protobuf/build/log.txt | grep -v fsanitize || true
+    - name: Build and install grpc with ASAN
+      shell: bash # enable pipefail
+      run: |
+        git clone --recurse-submodules -b ${{ matrix.grpc-version }} https://github.com/grpc/grpc
+        cd grpc && mkdir build && cd build
+        CXXFLAGS="-fsanitize=address -fno-omit-frame-pointer" \
+          CFLAGS="-fsanitize=address -fno-omit-frame-pointer" \
+          LDFLAGS="-fsanitize=address -shared-libsan -Wl,-rpath=$(dirname $(clang-19 --print-file-name=libclang_rt.asan-x86_64.so))" \
+          CC=clang-19 CXX=clang++-19 cmake -G Ninja \
+          -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+          -DCMAKE_CXX_STANDARD=17 \
+          -DCMAKE_INSTALL_PREFIX=/usr \
+          -DBUILD_SHARED_LIBS=ON \
+          -DgRPC_BUILD_TESTS=OFF \
+          -DgRPC_PROTOBUF_PROVIDER=package \
+          -DgRPC_ABSL_PROVIDER=package \
+          ..
+        sudo ninja -v install | tee log.txt
+    - name: Get compile/link commands that are not using -fsanitize
+      run: |
+        grep '/usr/bin/clang' grpc/build/log.txt | grep -v fsanitize || true
+    - name: Build and run 'repeated' example with LD_PRELOAD
+      continue-on-error: true
+      run: |
+        cd examples/repeated
+        mkdir build1 && cd build1
+        CXXFLAGS="-fsanitize=address -fno-omit-frame-pointer" \
+          CFLAGS="-fsanitize=address -fno-omit-frame-pointer" \
+          LDFLAGS="-fsanitize=address -shared-libsan -Wl,-rpath=$(dirname $(clang-19 --print-file-name=libclang_rt.asan-x86_64.so))" \
+          CC=clang-19 CXX=clang++-19 cmake \
+          -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+          -DCMAKE_CXX_STANDARD=17 \
+          ..
+        VERBOSE=1 make
+
+        LD_PRELOAD=$(clang-19 --print-file-name=libclang_rt.asan-x86_64.so) ./server 127.0.0.1:8899 &
+        sleep 2s
+        LD_PRELOAD=$(clang-19 --print-file-name=libclang_rt.asan-x86_64.so) ./client 127.0.0.1:8899
+    - name: Build and run 'repeated' example with LD_PRELOAD, ASAN_OPTIONS
+      run: |
+        cd examples/repeated
+        mkdir build2 && cd build2
+        CXXFLAGS="-fsanitize=address -fno-omit-frame-pointer" \
+          CFLAGS="-fsanitize=address -fno-omit-frame-pointer" \
+          LDFLAGS="-fsanitize=address -shared-libsan -Wl,-rpath=$(dirname $(clang-19 --print-file-name=libclang_rt.asan-x86_64.so))" \
+          CC=clang-19 CXX=clang++-19 cmake \
+          -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+          -DCMAKE_CXX_STANDARD=17 \
+          ..
+        VERBOSE=1 make
+
+        LD_PRELOAD=$(clang-19 --print-file-name=libclang_rt.asan-x86_64.so) ASAN_OPTIONS=detect_odr_violation=0 ./server 127.0.0.1:8899 &
+        sleep 2s
+        LD_PRELOAD=$(clang-19 --print-file-name=libclang_rt.asan-x86_64.so) ASAN_OPTIONS=detect_odr_violation=0 ./client 127.0.0.1:8899
