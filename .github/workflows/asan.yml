@@ -27,6 +27,14 @@ jobs:
       shell: bash # enable pipefail
       run: |
         git clone --recurse-submodules -b ${{ matrix.grpc-version }} https://github.com/grpc/grpc
+
+        pushd `pwd`
+        cd grpc && git co 2ed410a9ca29085078a19172707a05980c4c7529 || true
+        git rev-parse HEAD
+        popd
+        # Disable SOO
+        # sed -i 's/< 8/< 18/g' grpc/third_party/protobuf/src/google/protobuf/repeated_field.h
+
         cd grpc && mkdir build && cd build
         CXXFLAGS="-fsanitize=address -fno-omit-frame-pointer" \
           CFLAGS="-fsanitize=address -fno-omit-frame-pointer" \
@@ -96,6 +104,14 @@ jobs:
       shell: bash # enable pipefail
       run: |
         git clone --recurse-submodules -b ${{ matrix.protobuf-version }} https://github.com/protocolbuffers/protobuf
+
+        pushd `pwd`
+        cd grpc && git co 2ed410a9ca29085078a19172707a05980c4c7529 || true
+        git rev-parse HEAD
+        popd
+        # Disable SOO
+        # sed -i 's/< 8/< 18/g' protobuf/src/google/protobuf/repeated_field.h
+
         cd protobuf && mkdir build && cd build
           CC=clang-19 CXX=clang++-19 cmake -G Ninja \
           -DCMAKE_BUILD_TYPE=RelWithDebInfo \
@@ -202,6 +218,14 @@ jobs:
       shell: bash # enable pipefail
       run: |
         git clone --recurse-submodules -b ${{ matrix.protobuf-version }} https://github.com/protocolbuffers/protobuf
+
+        pushd `pwd`
+        cd grpc && git co 2ed410a9ca29085078a19172707a05980c4c7529 || true
+        git rev-parse HEAD
+        popd
+        # Disable SOO
+        # sed -i 's/< 8/< 18/g' protobuf/src/google/protobuf/repeated_field.h
+
         cd protobuf && mkdir build && cd build
         CXXFLAGS="-fsanitize=address -fno-omit-frame-pointer" \
           CFLAGS="-fsanitize=address -fno-omit-frame-pointer" \
