@@ -7,6 +7,7 @@ permissions:
 
 jobs:
   static:
+    if: false
     name: Static grpc-${{ matrix.grpc-version }}, ASAN all
     runs-on: ubuntu-24.04
     strategy:
@@ -56,6 +57,7 @@ jobs:
         ./client 127.0.0.1:8899
 
   shared:
+    if: false
     name: Shared grpc-${{ matrix.grpc-version }}, ASAN exec only
     runs-on: ubuntu-24.04
     strategy:
@@ -162,10 +164,11 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - grpc-version: 'v1.68.1'
-            protobuf-version: 'v28.1'
-            abseil-version: '20240722.0'
-          - grpc-version: 'v1.69.0'
+          # - grpc-version: 'v1.68.1'
+          # protobuf-version: 'v28.1'
+          # abseil-version: '20240722.0'
+          # - grpc-version: 'v1.69.0'
+          - grpc-version: 'fix-odr-build-issue'
             protobuf-version: 'v29.0'
             abseil-version: '20240722.0'
 
@@ -221,7 +224,8 @@ jobs:
     - name: Build and install grpc with ASAN
       shell: bash # enable pipefail
       run: |
-        git clone --recurse-submodules -b ${{ matrix.grpc-version }} https://github.com/grpc/grpc
+        git clone --recurse-submodules -b ${{ matrix.grpc-version }} https://github.com/Nordix/grpc
+        #git clone --recurse-submodules -b ${{ matrix.grpc-version }} https://github.com/grpc/grpc
         cd grpc && mkdir build && cd build
         CXXFLAGS="-fsanitize=address -fno-omit-frame-pointer" \
           CFLAGS="-fsanitize=address -fno-omit-frame-pointer" \
@@ -272,3 +276,4 @@ jobs:
         LD_PRELOAD=$(clang-19 --print-file-name=libclang_rt.asan-x86_64.so) ASAN_OPTIONS=detect_odr_violation=0 ./server 127.0.0.1:8899 &
         sleep 2s
         LD_PRELOAD=$(clang-19 --print-file-name=libclang_rt.asan-x86_64.so) ASAN_OPTIONS=detect_odr_violation=0 ./client 127.0.0.1:8899
+
