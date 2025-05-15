@@ -5,16 +5,19 @@ This is for Linux, see alternative information for [Windows](windows.md)
 ## Install
 
 ```
-MY_INSTALL_DIR=`pwd`/install
-
 git clone --recurse-submodules -b v1.41.0 https://github.com/grpc/grpc
-mkdir -p grpc/build && cd grpc/build
-cmake -GNinja \
-      -DgRPC_INSTALL=ON \
-      -DgRPC_BUILD_TESTS=ON \
-      -DCMAKE_INSTALL_PREFIX=$MY_INSTALL_DIR \
-      ../..
-ninja install
+cd grpc
+mkdir build && cd build
+
+MY_INSTALL_DIR=$HOME/tmp/grpc-v1.41.0
+CC=clang-17 CXX=clang++-17 cmake -G Ninja \
+    -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+    -DCMAKE_CXX_STANDARD=17 \
+    -DCMAKE_INSTALL_PREFIX=$MY_INSTALL_DIR \
+    -DBUILD_SHARED_LIBS=ON \
+    -DgRPC_BUILD_TESTS=OFF \
+    ..
+ninja -v install
 
 (make -j 4 all install)
 ```
@@ -23,11 +26,12 @@ ninja install
 
 ```
 mkdir examples/build && cd examples/build
-cmake -DCMAKE_BUILD_TYPE=DEBUG ..
-make
+cmake -DCMAKE_BUILD_TYPE=DEBUG -DCMAKE_PREFIX_PATH=$MY_INSTALL_DIR ..
+LD_LIBRARY_PATH=$MY_INSTALL_DIR/lib VERBOSE=1 make
 
-# To build examples using the channel argument DSCP:
-cmake -DCMAKE_BUILD_TYPE=DEBUG -DENABLE_DSCP_TESTS=ON ..
+# Flags
+Disable examples using the channel argument DSCP:
+-DENABLE_DSCP_TESTS=OFF ..
 ```
 
 ## Run examples
@@ -35,6 +39,10 @@ cmake -DCMAKE_BUILD_TYPE=DEBUG -DENABLE_DSCP_TESTS=ON ..
 ### Regular server and client
 
 ```
+
+LD_LIBRARY_PATH=$MY_INSTALL_DIR/lib GRPC_VERBOSITY=debug ./server/server "0.0.0.0:52231"
+LD_LIBRARY_PATH=$MY_INSTALL_DIR/lib GRPC_VERBOSITY=debug ./client/client "0.0.0.0:52231"
+
 # IPv4
 GRPC_VERBOSITY=debug ./server/server "0.0.0.0:52231"
 GRPC_VERBOSITY=debug ./client/client "0.0.0.0:52231"

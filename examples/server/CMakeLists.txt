@@ -4,5 +4,5 @@ add_executable(server
 
 target_link_libraries(server
   myproto
-  gRPC::grpc++_unsecure
+  gRPC::grpc++
 )

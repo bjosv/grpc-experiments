@@ -4,10 +4,10 @@ project(Examples LANGUAGES CXX)
 # Options
 option(ENABLE_DSCP_TESTS "Build DSCP tests" ON)
 
-if(NOT WIN32)
-  # GRPC and Protocol Buffers libraries location
-  list(APPEND CMAKE_PREFIX_PATH "../install")
-endif()
+#if(NOT WIN32)
+#  # GRPC and Protocol Buffers libraries location
+#  list(APPEND CMAKE_PREFIX_PATH "../install")
+#endif()
 
 find_package(Protobuf CONFIG REQUIRED)
 find_package(gRPC CONFIG REQUIRED)

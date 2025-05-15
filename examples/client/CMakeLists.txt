@@ -4,5 +4,5 @@ add_executable(client
 
 target_link_libraries(client
   myproto
-  gRPC::grpc++_unsecure
+  gRPC::grpc++
 )
